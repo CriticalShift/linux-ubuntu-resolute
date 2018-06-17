@@ -209,6 +209,7 @@ struct aa_attachment {
  * @disconnected: what to prepend if attach_disconnected is specified
  * @attach: attachment rules for the profile
  * @rules: rules to be enforced
+ * @net_compat: v2 compat network controls for the profile
  *
  * learning_cache: the accesses learned in complain mode
  * raw_data: rawdata of the loaded profile policy
@@ -246,6 +247,7 @@ struct aa_profile {
 
 	struct aa_attachment attach;
 	struct list_head rules;
+	struct aa_net_compat *net_compat;
 
 	struct aa_loaddata *rawdata;
 	unsigned char *hash;
