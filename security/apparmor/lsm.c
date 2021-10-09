@@ -29,6 +29,7 @@
 #include <uapi/linux/lsm.h>
 
 #include "include/af_unix.h"
+#include "include/af_inet.h"
 #include "include/apparmor.h"
 #include "include/apparmorfs.h"
 #include "include/audit.h"
@@ -1469,8 +1470,13 @@ static int apparmor_socket_bind(struct socket *sock,
 	AA_BUG(!address);
 	AA_BUG(in_interrupt());
 
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return aa_unix_bind_perm(sock, address, addrlen);
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_bind_perm(sock, address, addrlen);
+	}
 	return aa_sk_perm(OP_BIND, AA_MAY_BIND, sock->sk);
 }
 
@@ -1483,8 +1489,13 @@ static int apparmor_socket_connect(struct socket *sock,
 	AA_BUG(in_interrupt());
 
 	/* PF_UNIX goes through unix_stream_connect && unix_may_send */
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return 0;
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_connect_perm(sock, address, addrlen);
+	}
 	return aa_sk_perm(OP_CONNECT, AA_MAY_CONNECT, sock->sk);
 }
 
@@ -1494,8 +1505,13 @@ static int apparmor_socket_listen(struct socket *sock, int backlog)
 	AA_BUG(!sock->sk);
 	AA_BUG(in_interrupt());
 
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return aa_unix_listen_perm(sock, backlog);
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_listen_perm(sock, backlog);
+	}
 	return aa_sk_perm(OP_LISTEN, AA_MAY_LISTEN, sock->sk);
 }
 
@@ -1510,8 +1526,13 @@ static int apparmor_socket_accept(struct socket *sock, struct socket *newsock)
 	AA_BUG(!newsock);
 	AA_BUG(in_interrupt());
 
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return aa_unix_accept_perm(sock, newsock);
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_accept_perm(sock, newsock);
+	}
 	return aa_sk_perm(OP_ACCEPT, AA_MAY_ACCEPT, sock->sk);
 }
 
@@ -1524,8 +1545,14 @@ static int aa_sock_msg_perm(const char *op, u32 request, struct socket *sock,
 	AA_BUG(in_interrupt());
 
 	/* PF_UNIX goes through unix_may_send */
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return 0;
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_msg_perm(op, request, sock, msg, size);
+	}
+
 	return aa_sk_perm(op, request, sock->sk);
 }
 
@@ -1548,8 +1575,13 @@ static int aa_sock_perm(const char *op, u32 request, struct socket *sock)
 	AA_BUG(!sock->sk);
 	AA_BUG(in_interrupt());
 
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return aa_unix_sock_perm(op, request, sock);
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_sock_perm(op, request, sock);
+	}
 	return aa_sk_perm(op, request, sock->sk);
 }
 
@@ -1571,8 +1603,13 @@ static int aa_sock_opt_perm(const char *op, u32 request, struct socket *sock,
 	AA_BUG(!sock->sk);
 	AA_BUG(in_interrupt());
 
-	if (sock->sk->sk_family == PF_UNIX)
+	switch (sock->sk->sk_family) {
+	case PF_UNIX:
 		return aa_unix_opt_perm(op, request, sock, level, optname);
+	case PF_INET:
+	case PF_INET6:
+		return aa_inet_opt_perm(op, request, sock, level, optname);
+	}
 	return aa_sk_perm(op, request, sock->sk);
 }
 
