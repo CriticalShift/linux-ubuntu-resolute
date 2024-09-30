@@ -279,6 +279,8 @@ static void __init initialize_lsm(struct lsm_info *lsm)
  */
 u32 lsm_active_cnt __ro_after_init;
 const struct lsm_id *lsm_idlist[LSM_CONFIG_COUNT];
+=======
+u32 lsm_prop_cnt __ro_after_init;
 
 /* Populate ordered LSMs list from comma-separated LSM name list. */
 static void __init ordered_lsm_parse(const char *order, const char *origin)
@@ -575,6 +577,8 @@ void __init security_add_hooks(struct security_hook_list *hooks, int count,
 		if (lsm_active_cnt >= LSM_CONFIG_COUNT)
 			panic("%s Too many LSMs registered.\n", __func__);
 		lsm_idlist[lsm_active_cnt++] = lsmid;
+		if (lsmid->lsmprop)
+			lsm_prop_cnt++;
 	}
 
 	for (i = 0; i < count; i++) {
